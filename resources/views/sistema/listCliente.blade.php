@@ -46,77 +46,88 @@
             ];
         @endphp
 
+        {{-- resources/views/sistema/listCliente.blade.php --}}
+
+        {{-- Incluye SweetAlert2 en tu layout principal, si no lo tienes ya --}}
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
         {{-- Minimal example / fill data using the component slot --}}
         <x-adminlte-datatable id="table1" :heads="$heads" :config="$config">
             @foreach($clientes as $cliente)
-                                <tr>
-                                    <td>{{ $cliente->id_cliente }}</td>
-                                    <td>{{ $cliente->nombre_cliente }}</td>
-                                    <td>{{ $cliente->residencia }}</td>
-                                    <td>{{ $cliente->estado }}</td>
-                                    <td>
-                                        <!-- Botón Editar -->
-                                        <button
-                  class="btn btn-warning btn-sm mr-2"
-                  data-toggle="modal"
-                  data-target="#ModalEditar"
-                  data-id="{{ $cliente->id_cliente }}"
-                  data-nombre="{{ $cliente->nombre_cliente }}"
-                  data-fecha_nacimiento="{{ \Carbon\Carbon::parse($cliente->fecha_nacimiento)->format('d-m-Y') }}"
-                >
-                  <i class="fas fa-edit"></i> Editar
-                </button>
+                <tr>
+                    <td>{{ $cliente->id_cliente }}</td>
+                    <td>{{ $cliente->nombre_cliente }}</td>
+                    <td>{{ $cliente->residencia }}</td>
+                    <td>{{ $cliente->estado }}</td>
+                    <td class="d-flex">
+                        <!-- Botón Editar -->
+                        <button class="btn btn-warning btn-sm mr-2" data-toggle="modal" data-target="#ModalEditar"
+                            data-id="{{ $cliente->id_cliente }}" data-nombre="{{ $cliente->nombre_cliente }}"
+                            data-fecha_nacimiento="{{ \Carbon\Carbon::parse($cliente->fecha_nacimiento)->format('d-m-Y') }}">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
 
-                                        <!-- Botón Detalles -->
-                                        <button class="btn btn-info btn-sm" data-toggle="modal"
-                                            data-target="#ModalDetalles-{{ $cliente->id_cliente }}">
-                                            <i class="fas fa-eye"></i> Detalles
-                                        </button>
-                                        <!-- Modal Detalles específico para este cliente -->
-                                        <div class="modal fade" id="ModalDetalles-{{ $cliente->id_cliente }}" tabindex="-1" role="dialog">
-                                            <div class="modal-dialog modal-lg modal-dialog-centered">
-                                                <div class="modal-content">
+                        <!-- Botón Detalles -->
+                        <button class="btn btn-info btn-sm mr-2" data-toggle="modal"
+                            data-target="#ModalDetalles-{{ $cliente->id_cliente }}">
+                            <i class="fas fa-eye"></i> Detalles
+                        </button>
 
-                                                    <div class="modal-body">
-                                                        {{-- Este es el widget AdminLTE nativo --}}
-                                                        <x-adminlte-profile-widget name="{{ $cliente->nombre_cliente }}"
-                                                            desc="{{ Str::title(str_replace('_', ' ', $cliente->tipo_membresia)) }}"
-                                                            theme="teal" img="https://picsum.photos/id/{{ $cliente->id_cliente }}/100">
+                        <!-- Botón Eliminar -->
+                        <button type="button" class="btn btn-danger btn-sm btn-delete" data-id="{{ $cliente->id_cliente }}">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
 
-                                                            <x-adminlte-profile-col-item title="ID" text="{{ $cliente->id_cliente }}"
-                                                                url="#" />
-                                                            <x-adminlte-profile-col-item title="DNI" text="{{ $cliente->dni_cliente }}"
-                                                                url="#" />
-                                                            <x-adminlte-profile-col-item title="Nacimiento"
-                                                                text="{{ $cliente->fecha_nacimiento }}" url="#" />
-                                                            <x-adminlte-profile-col-item title="Residencia"
-                                                                text="{{ $cliente->residencia }}" url="#" />
-                                                            <x-adminlte-profile-col-item title="Tipo Membresía"
-                                                                text="{{ Str::title(str_replace('_', ' ', $cliente->tipo_membresia)) }}"
-                                                                url="#" />
-                                                            <x-adminlte-profile-col-item title="Inicio Membresía"
-                                                                text="{{ $cliente->fecha_inicio_membresia }}" url="#" />
-                                                            <x-adminlte-profile-col-item title="Fin Membresía"
-                                                                text="{{ $cliente->fecha_fin_membresia }}" url="#" />
-                                                            <x-adminlte-profile-col-item title="Importe (S/)"
-                                                                text="{{ $cliente->importe_membresia }}" url="#" />
-                                                            <x-adminlte-profile-col-item title="Estado"
-                                                                text="{{ ucfirst($cliente->estado) }}" url="#" />
+                        <!-- Formulario oculto para DELETE -->
+                        <form id="form-delete-{{ $cliente->id_cliente }}"
+                            action="{{ route('cliente.destroy', $cliente->id_cliente) }}" method="POST"
+                            style="display: none;">
+                            @csrf
+                            @method('DELETE')
+                        </form>
+                    </td>
+                </tr>
 
-                                                        </x-adminlte-profile-widget>
-                                                    </div>
+                <!-- Modal Detalles específico para este cliente -->
+                <div class="modal fade" id="ModalDetalles-{{ $cliente->id_cliente }}" tabindex="-1" role="dialog">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
 
-                                                    <div class="modal-footer justify-content-end">
-                                                        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
-                                                            Cerrar
-                                                        </button>
-                                                    </div>
+                            <div class="modal-body">
+                                {{-- Este es el widget AdminLTE nativo --}}
+                                <x-adminlte-profile-widget name="{{ $cliente->nombre_cliente }}"
+                                    desc="{{ Str::title(str_replace('_', ' ', $cliente->tipo_membresia)) }}" theme="teal"
+                                    img="https://picsum.photos/id/{{ $cliente->id_cliente }}/100">
 
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
+                                    <x-adminlte-profile-col-item title="ID" text="{{ $cliente->id_cliente }}" url="#" />
+                                    <x-adminlte-profile-col-item title="DNI" text="{{ $cliente->dni_cliente }}" url="#" />
+                                    <x-adminlte-profile-col-item title="Nacimiento" text="{{ $cliente->fecha_nacimiento }}"
+                                        url="#" />
+                                    <x-adminlte-profile-col-item title="Residencia" text="{{ $cliente->residencia }}"
+                                        url="#" />
+                                    <x-adminlte-profile-col-item title="Tipo Membresía"
+                                        text="{{ Str::title(str_replace('_', ' ', $cliente->tipo_membresia)) }}" url="#" />
+                                    <x-adminlte-profile-col-item title="Inicio Membresía"
+                                        text="{{ $cliente->fecha_inicio_membresia }}" url="#" />
+                                    <x-adminlte-profile-col-item title="Fin Membresía"
+                                        text="{{ $cliente->fecha_fin_membresia }}" url="#" />
+                                    <x-adminlte-profile-col-item title="Importe (S/)"
+                                        text="{{ $cliente->importe_membresia }}" url="#" />
+                                    <x-adminlte-profile-col-item title="Estado" text="{{ ucfirst($cliente->estado) }}"
+                                        url="#" />
+
+                                </x-adminlte-profile-widget>
+                            </div>
+
+                            <div class="modal-footer justify-content-end">
+                                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
+                                    Cerrar
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
             @endforeach
         </x-adminlte-datatable>
     </div>
@@ -484,6 +495,26 @@
             draggable: true
         });
         // y aquí no evitas el envío, el formulario se envía normalmente
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const id = this.dataset.id;
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: "¡Esta acción no se puede deshacer!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById(`form-delete-${id}`).submit();
+                    }
+                });
+            });
+        });
     });
 
 

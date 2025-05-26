@@ -59,38 +59,44 @@ class ClientController extends Controller
      */
     public function store(Request $request)
     {
-        $validacion = $request->validate(
-            [
-                'nombre_cliente' => 'required|string|max:75',
-                'dni_cliente' => 'required|max:9',
-                'fecha_nacimiento' => 'required|date_format:d-m-Y',
-                'residencia' => 'required | string',
-                'tipo_membresia' => 'required|string',
-                'fecha_inicio_membresia' => 'required|date_format:d-m-Y',
-                'fecha_fin_membresia' => 'required|date_format:d-m-Y',
-                'importe_membresia' => 'numeric',
-            ]
-        );
+        $validacion = $request->validate([
+            'nombre_cliente' => 'string|max:75',
+            'dni_cliente' => 'max:9',
+            'fecha_nacimiento' => 'nullable|date_format:d-m-Y',
+            'residencia' => 'string',
+            'tipo_membresia' => 'string',
+            'fecha_inicio_membresia' => 'nullable|date_format:d-m-Y',
+            'fecha_fin_membresia' => 'nullable|date_format:d-m-Y',
+            'importe_membresia' => 'numeric',
+        ]);
 
         $cliente = new Client();
+        $cliente->nombre_cliente = $validacion['nombre_cliente'];
+        $cliente->dni_cliente = $validacion['dni_cliente'];
+        $cliente->residencia = $validacion['residencia'];
+        $cliente->tipo_membresia = $validacion['tipo_membresia'];
+        $cliente->importe_membresia = $validacion['importe_membresia'];
 
-        $cliente->nombre_cliente = $request->input('nombre_cliente');
-        $cliente->dni_cliente = $request->input('dni_cliente');
-        $cliente->fecha_nacimiento = $request->input('fecha_nacimiento');
-        $cliente->residencia = $request->input('residencia');
-        $cliente->tipo_membresia = $request->input('tipo_membresia');
-        $cliente->fecha_inicio_membresia = $request->input('fecha_inicio_membresia');
-        $cliente->fecha_fin_membresia = $request->input('fecha_fin_membresia');
-        $cliente->importe_membresia = $request->input('importe_membresia');
-
-        $cliente->fecha_nacimiento = Carbon::createFromFormat('d-m-Y', $request->input('fecha_nacimiento'))->format('Y-m-d');
-        $cliente->fecha_inicio_membresia = Carbon::createFromFormat('d-m-Y', $request->input('fecha_inicio_membresia'))->format('Y-m-d');
-        $cliente->fecha_fin_membresia = Carbon::createFromFormat('d-m-Y', $request->input('fecha_fin_membresia'))->format('Y-m-d');
+        // Solo convierto si vino algo
+        if (!empty($validacion['fecha_nacimiento'])) {
+            $cliente->fecha_nacimiento =
+                Carbon::createFromFormat('d-m-Y', $validacion['fecha_nacimiento'])
+                    ->format('Y-m-d');
+        }
+        if (!empty($validacion['fecha_inicio_membresia'])) {
+            $cliente->fecha_inicio_membresia =
+                Carbon::createFromFormat('d-m-Y', $validacion['fecha_inicio_membresia'])
+                    ->format('Y-m-d');
+        }
+        if (!empty($validacion['fecha_fin_membresia'])) {
+            $cliente->fecha_fin_membresia =
+                Carbon::createFromFormat('d-m-Y', $validacion['fecha_fin_membresia'])
+                    ->format('Y-m-d');
+        }
 
         $cliente->save();
 
-
-        return back()->with('message', 'ok');
+        return back()->with('message', 'Cliente registrado correctamente');
     }
 
     /**
@@ -108,20 +114,21 @@ class ClientController extends Controller
     public function update(Request $request, $id)
     {
         $data = $request->validate([
-            'nombre_cliente' => 'required|string|max:255',
-            'fecha_nacimiento' => 'required|date_format:d-m-Y',
+            'nombre_cliente' => 'string|max:255',
+            'fecha_nacimiento' => 'date_format:d-m-Y',
         ]);
 
         $cliente = Client::findOrFail($id);
 
-        // Convertir fecha a Y-m-d si tu campo es date
-        $fecha = Carbon::createFromFormat('d-m-Y', $data['fecha_nacimiento'])
-            ->format('Y-m-d');
+        $updateData = [];
+        if (isset($data['nombre_cliente'])) {
+            $updateData['nombre_cliente'] = $data['nombre_cliente'];
+        }
+        if (isset($data['fecha_nacimiento'])) {
+            $updateData['fecha_nacimiento'] = Carbon::createFromFormat('d-m-Y', $data['fecha_nacimiento'])->format('Y-m-d');
+        }
 
-        $cliente->update([
-            'nombre_cliente' => $data['nombre_cliente'],
-            'fecha_nacimiento' => $fecha,
-        ]);
+        $cliente->update($updateData);
 
         return redirect()
             ->route('cliente.index')
@@ -133,7 +140,16 @@ class ClientController extends Controller
      */
     public function destroy(string $id)
     {
-        return $id;
+        // 1) Buscar el cliente o lanzar 404 si no existe
+        $cliente = Client::findOrFail($id);
+
+        // 2) Eliminar (si usas SoftDeletes, será un “soft delete”)
+        $cliente->delete();
+
+        // 3) Redirigir con mensaje de éxito
+        return redirect()
+            ->route('cliente.index')
+            ->with('success', 'Cliente eliminado correctamente.');
     }
     public function reporte()
     {
